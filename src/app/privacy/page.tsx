@@ -47,7 +47,7 @@ export default function PrivacyPage() {
 
       <h2>Who processes it</h2>
       <p>
-        Enquiries are delivered to us by email through a form-to-email provider (Web3Forms or Resend), and the website is served by
+        Enquiries are delivered to us by email through a form-to-email provider (FormSubmit, Web3Forms or Resend), and the website is served by
         our hosting provider. These providers process data on our behalf to deliver the service and may do so outside
         your country. If you choose to send your enquiry on WhatsApp or from your own email app, it is
         handled under that service’s own terms and privacy policy.

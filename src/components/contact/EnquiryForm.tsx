@@ -90,6 +90,30 @@ async function sendViaWeb3Forms(e: Enquiry, key: string): Promise<Result> {
   return res.ok && data.success ? { ok: true } : { ok: false, code: "delivery_failed" };
 }
 
+/**
+ * Delivers straight from the browser to FormSubmit, which emails hello@praxera.in.
+ * No account or key: the very first submission sends a one-time activation email to that inbox.
+ */
+async function sendViaFormSubmit(e: Enquiry): Promise<Result> {
+  if (!site.publicEmail) return { ok: false, code: "delivery_failed" };
+  const res = await fetch(`https://formsubmit.co/ajax/${site.publicEmail}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({
+      ...Object.fromEntries(enquiryRows(e)),
+      "What they want to improve": e.message,
+      _subject: `${enquirySubject(e)} — ${site.name}`,
+      _replyto: e.email,
+      _template: "table",
+      _captcha: "false",
+      _honey: e.website,
+    }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  const data = (await res.json().catch(() => ({}))) as { success?: string | boolean };
+  return res.ok && String(data.success) === "true" ? { ok: true } : { ok: false, code: "delivery_failed" };
+}
+
 /** Delivers through this site's /api/enquiry route (Resend, when configured on the server). */
 async function sendViaApi(payload: unknown): Promise<Result> {
   const res = await fetch("/api/enquiry", {
@@ -174,14 +198,16 @@ export function EnquiryForm() {
     setErrors({});
     setStatus({ kind: "submitting" });
     try {
-      const result = WEB3FORMS_KEY ? await sendViaWeb3Forms(check.data, WEB3FORMS_KEY) : await sendViaApi(payload);
+      let result = WEB3FORMS_KEY ? await sendViaWeb3Forms(check.data, WEB3FORMS_KEY) : await sendViaApi(payload);
+      // No server email provider configured: send directly from the browser instead.
+      if (result.code === "not_configured") result = await sendViaFormSubmit(check.data);
       if (result.ok) {
         setStatus({ kind: "success" });
       } else if (result.fields || result.code === "too_fast" || result.code === "rate_limited") {
         if (result.fields) setErrors(result.fields);
         setStatus({ kind: "error", message: result.message ?? "Please check the form and try again." });
       } else {
-        setStatus(handoff(check.data, result.code !== "not_configured"));
+        setStatus(handoff(check.data, true));
       }
     } catch {
       setStatus(handoff(check.data, true));
@@ -505,6 +531,11 @@ export function EnquiryForm() {
           </>
         )}
       </button>
+      {status.kind === "submitting" && (
+        <p className="text-sm text-slate-500" aria-live="polite">
+          Sending your enquiry to {site.publicEmail} — this can take a few seconds.
+        </p>
+      )}
       <p id="form-privacy" className="text-xs leading-relaxed text-slate-500">
         We collect only what is needed to reply to you. Your details are never sold or added to marketing lists.
       </p>

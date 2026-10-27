@@ -31,7 +31,8 @@ Checks: `npx tsc --noEmit`, `npm run lint`, `npm run build`.
 | --- | --- | --- |
 | `NEXT_PUBLIC_WEB3FORMS_KEY` set (recommended) | Clicks **Send enquiry** | Email inbox **hello@praxera.in**, and the Web3Forms dashboard |
 | `RESEND_API_KEY` + `ENQUIRY_FROM_EMAIL` set | Clicks **Send enquiry** | Email inbox **hello@praxera.in** |
-| Nothing set, or automatic sending fails | Chooses **Send on WhatsApp** or **Send by email**; the message opens pre-written | WhatsApp on **+91 77092 88629**, or the **hello@praxera.in** inbox |
+| Nothing set (default) | Clicks **Send enquiry** — sent through FormSubmit, no key needed | Email inbox **hello@praxera.in**. The first enquiry ever sent triggers a one-time **Activate Form** email from FormSubmit; click it once. |
+| Automatic sending fails | Chooses **Send on WhatsApp** or **Send by email**; the message opens pre-written | WhatsApp on **+91 77092 88629**, or the **hello@praxera.in** inbox |
 
 hello@praxera.in must be a working mailbox (or forward to one) for email to arrive.
 
