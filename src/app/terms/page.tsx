@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default function TermsPage() {
-  const operator = site.legal.entityName ?? `${site.name}, a trading brand of its founder, ${site.founder.name}`;
+  const operator = site.legal.entityName ?? site.name;
   return (
     <LegalPage title="Terms of Service" updated="27 October 2026">
       <p>

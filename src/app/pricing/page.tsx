@@ -5,7 +5,6 @@ import { Section, SectionHeading } from "@/components/ui/Section";
 import { Reveal, RevealGroup, RevealItem } from "@/components/ui/Reveal";
 import { CtaBanner } from "@/components/ui/CtaBanner";
 import { PricingCards } from "@/components/pricing/PricingCards";
-import { RegionSelector } from "@/components/region/RegionSelector";
 import { canonical } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -62,16 +61,6 @@ export default function PricingPage() {
       />
 
       <Section tone="mist" id="engagements">
-        <div id="region" className="mb-12 flex flex-col gap-6 rounded-2xl border border-line bg-white p-6 shadow-card md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="font-display text-lg font-bold text-midnight-900">Your region</h2>
-            <p className="mt-1 max-w-xl text-sm text-slate-600">
-              Pricing and quotes use separate approved price lists for each market. Choose your region if the one shown is
-              not right.
-            </p>
-          </div>
-          <RegionSelector showHint className="w-full md:w-80" />
-        </div>
         <PricingCards />
       </Section>
 

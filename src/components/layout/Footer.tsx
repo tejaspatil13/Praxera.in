@@ -2,7 +2,6 @@ import Link from "next/link";
 import { nav, site } from "@/content/site";
 import { services } from "@/content/services";
 import { callList, leadKaro } from "@/content/caseStudies";
-import { RegionSelector } from "@/components/region/RegionSelector";
 import { Wordmark } from "./Wordmark";
 
 export function Footer() {
@@ -16,9 +15,6 @@ export function Footer() {
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-400">
             AI, automation, integrations and custom software for businesses in India, the UK, the USA and beyond.
           </p>
-          <div className="mt-8 max-w-xs">
-            <RegionSelector tone="dark" />
-          </div>
         </div>
 
         <nav aria-label="Footer" className="grid grid-cols-2 gap-10 sm:grid-cols-3 md:col-span-8">
@@ -90,13 +86,11 @@ export function Footer() {
             <p>
               © {site.copyrightYear} {legal.entityName ?? site.name}. All rights reserved.
             </p>
-            {legal.entityName ? (
+            {legal.entityName && (
               <p>
                 {legal.registrationNumber && <>Registration no. {legal.registrationNumber}. </>}
                 {legal.registeredAddress && <>Registered address: {legal.registeredAddress}.</>}
               </p>
-            ) : (
-              <p>Praxera Technologies is a trading brand founded by {site.founder.name}.</p>
             )}
           </div>
           <ul className="flex gap-6">

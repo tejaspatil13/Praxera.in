@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default function PrivacyPage() {
-  const operator = site.legal.entityName ?? `${site.name}, a trading brand of its founder, ${site.founder.name}`;
+  const operator = site.legal.entityName ?? site.name;
   return (
     <LegalPage title="Privacy Policy" updated="27 October 2026">
       <p>

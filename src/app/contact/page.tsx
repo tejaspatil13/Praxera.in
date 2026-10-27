@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 const next = [
   { t: "You describe the process", b: "What happens today, which tools are involved, and what takes the most time." },
-  { t: "The founder reviews it", b: `${site.founder.name} reads every enquiry personally.` },
+  { t: "Our team reviews it", b: "Every enquiry is read and reviewed by our team." },
   { t: "We reply with next steps", b: "Usually a short discovery conversation to understand your workflow before suggesting anything." },
 ];
 

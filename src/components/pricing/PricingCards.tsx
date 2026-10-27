@@ -93,10 +93,7 @@ export function CurrencyNote({ className = "" }: { className?: string }) {
       <strong className="font-semibold text-midnight-900">
         {region.currency} ({region.symbol})
       </strong>{" "}
-      for {region.id === "INTL" ? "international clients" : region.label}.{" "}
-      <Link href="/pricing#region" className="font-medium text-accent-strong underline-offset-2 hover:underline">
-        Change region
-      </Link>
+      for {region.id === "INTL" ? "international clients" : region.label}.
     </p>
   );
 }
