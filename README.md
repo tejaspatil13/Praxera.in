@@ -20,7 +20,7 @@ Checks: `npx tsc --noEmit`, `npm run lint`, `npm run build`.
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `NEXT_PUBLIC_SITE_URL` | for production | Domain, e.g. `https://praxera.tech`. Turns on canonical URLs, the sitemap and search indexing. While it is unset, `robots.txt` blocks indexing. |
-| `NEXT_PUBLIC_WEB3FORMS_KEY` | recommended | Web3Forms access key for hello@praxera.in. |
+| `NEXT_PUBLIC_WEB3FORMS_KEY` | no | Web3Forms access key. The key for hello@praxera.in is already built in; set this only to use a different one. |
 | `RESEND_API_KEY` | optional | API key from resend.com. |
 | `ENQUIRY_TO_EMAIL` | optional | Inbox that receives enquiries. Defaults to `hello@praxera.in`. |
 | `ENQUIRY_FROM_EMAIL` | optional (with Resend) | Sender on a domain verified in Resend, e.g. `Praxera Technologies <enquiries@praxera.in>`. |
@@ -29,9 +29,9 @@ Checks: `npx tsc --noEmit`, `npm run lint`, `npm run build`.
 
 | Setup | What the visitor does | Where you read it |
 | --- | --- | --- |
-| `NEXT_PUBLIC_WEB3FORMS_KEY` set (recommended) | Clicks **Send enquiry** | Email inbox **hello@praxera.in**, and the Web3Forms dashboard |
+| Default (Web3Forms key built in) | Clicks **Send enquiry** | Email inbox **hello@praxera.in**, and the Web3Forms dashboard |
 | `RESEND_API_KEY` + `ENQUIRY_FROM_EMAIL` set | Clicks **Send enquiry** | Email inbox **hello@praxera.in** |
-| Nothing set (default) | Clicks **Send enquiry** — sent through FormSubmit, no key needed | Email inbox **hello@praxera.in**. The first enquiry ever sent triggers a one-time **Activate Form** email from FormSubmit; click it once. |
+| Web3Forms unreachable | Nothing — the site retries through FormSubmit automatically | Email inbox **hello@praxera.in**. The first enquiry ever sent triggers a one-time **Activate Form** email from FormSubmit; click it once. |
 | Automatic sending fails | Chooses **Send on WhatsApp** or **Send by email**; the message opens pre-written | WhatsApp on **+91 77092 88629**, or the **hello@praxera.in** inbox |
 
 hello@praxera.in must be a working mailbox (or forward to one) for email to arrive.

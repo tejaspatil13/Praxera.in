@@ -63,8 +63,8 @@ function Field({
 
 const errorsPresent = (e: Record<string, string>) => Object.keys(e).length > 0;
 
-/** Public Web3Forms access key (designed to be exposed in the browser). */
-const WEB3FORMS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_KEY;
+/** Public Web3Forms access key for hello@praxera.in (designed to be exposed in the browser). */
+const WEB3FORMS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_KEY || "30437669-89ca-44f0-b5d6-bccc1c92d051";
 
 type Result = { ok: boolean; code?: string; message?: string; fields?: Record<string, string> };
 
@@ -198,9 +198,11 @@ export function EnquiryForm() {
     setErrors({});
     setStatus({ kind: "submitting" });
     try {
-      let result = WEB3FORMS_KEY ? await sendViaWeb3Forms(check.data, WEB3FORMS_KEY) : await sendViaApi(payload);
-      // No server email provider configured: send directly from the browser instead.
-      if (result.code === "not_configured") result = await sendViaFormSubmit(check.data);
+      let result: Result = WEB3FORMS_KEY
+        ? await sendViaWeb3Forms(check.data, WEB3FORMS_KEY).catch((): Result => ({ ok: false, code: "unreachable" }))
+        : await sendViaApi(payload);
+      // No server email provider configured, or Web3Forms unreachable: send through FormSubmit instead.
+      if (result.code === "not_configured" || result.code === "unreachable") result = await sendViaFormSubmit(check.data);
       if (result.ok) {
         setStatus({ kind: "success" });
       } else if (result.fields || result.code === "too_fast" || result.code === "rate_limited") {
