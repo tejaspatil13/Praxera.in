@@ -4,11 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
-import { AlertCircle, CheckCircle2, Loader2, Send } from "lucide-react";
+import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, Mail, MessageCircle, Send } from "lucide-react";
 import { interests, isInterest } from "@/content/interests";
 import { countryOptions, PRIORITY_COUNT } from "@/content/countries";
-import { contactMethods, enquiryRows, enquirySchema, enquirySubject, fieldErrors, MIN_FILL_MS, type Enquiry } from "@/lib/enquiry";
+import { contactMethods, enquiryRows, enquirySchema, enquirySubject, enquiryText, fieldErrors, MIN_FILL_MS, type Enquiry } from "@/lib/enquiry";
 import { useRegion } from "@/components/region/RegionProvider";
+import { regionForCountry, regions } from "@/content/pricing";
 import { CurrencyNote } from "@/components/pricing/PricingCards";
 import { site } from "@/content/site";
 
@@ -16,7 +17,9 @@ type Status =
   | { kind: "idle" }
   | { kind: "submitting" }
   | { kind: "success" }
-  | { kind: "error"; message: string };
+  | { kind: "error"; message: string }
+  /** No automatic delivery: the visitor sends the prepared enquiry via WhatsApp or their email app. */
+  | { kind: "handoff"; text: string; subject: string; automaticFailed: boolean };
 
 const labelCls = "block text-sm font-semibold text-midnight-900";
 const inputCls =
@@ -63,7 +66,7 @@ const errorsPresent = (e: Record<string, string>) => Object.keys(e).length > 0;
 /** Public Web3Forms access key (designed to be exposed in the browser). */
 const WEB3FORMS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_KEY;
 
-type Result = { ok: boolean; message?: string; fields?: Record<string, string> };
+type Result = { ok: boolean; code?: string; message?: string; fields?: Record<string, string> };
 
 /** Delivers straight from the browser to Web3Forms, which emails hello@praxera.in. */
 async function sendViaWeb3Forms(e: Enquiry, key: string): Promise<Result> {
@@ -84,23 +87,27 @@ async function sendViaWeb3Forms(e: Enquiry, key: string): Promise<Result> {
   for (const [k, v] of Object.entries(fields)) body.append(k, v);
   const res = await fetch("https://api.web3forms.com/submit", { method: "POST", body });
   const data = (await res.json().catch(() => ({}))) as { success?: boolean; message?: string };
-  return res.ok && data.success ? { ok: true } : { ok: false, message: "Your enquiry could not be delivered. Please try again shortly." };
+  return res.ok && data.success ? { ok: true } : { ok: false, code: "delivery_failed" };
 }
 
-/** Delivers through this site's /api/enquiry route (Resend, or FormSubmit as a fallback). */
+/** Delivers through this site's /api/enquiry route (Resend, when configured on the server). */
 async function sendViaApi(payload: unknown): Promise<Result> {
   const res = await fetch("/api/enquiry", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  const data = (await res.json().catch(() => ({}))) as { ok?: boolean; message?: string; fields?: Record<string, string> };
-  return { ok: res.ok && !!data.ok, message: data.message, fields: data.fields };
+  const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; message?: string; fields?: Record<string, string> };
+  return { ok: res.ok && !!data.ok, code: data.error, message: data.message, fields: data.fields };
+}
+
+function handoff(e: Enquiry, automaticFailed: boolean): Status {
+  return { kind: "handoff", text: enquiryText(e), subject: `${enquirySubject(e)} — ${site.name}`, automaticFailed };
 }
 
 export function EnquiryForm() {
   const params = useSearchParams();
-  const { region, country: detectedCountry } = useRegion();
+  const { region, source, country: detectedCountry } = useRegion();
   const countries = useMemo(() => countryOptions(), []);
   const initialInterest = params.get("interest");
 
@@ -151,7 +158,8 @@ export function EnquiryForm() {
       ...values,
       country,
       interest: values.interest || undefined,
-      currency: region.currency,
+      // A region the visitor chose wins; otherwise follow the country they entered.
+      currency: source === "manual" || !country ? region.currency : regions[regionForCountry(country)].currency,
       startedAt: startedAt.current,
     };
     const check = enquirySchema.safeParse(payload);
@@ -169,14 +177,75 @@ export function EnquiryForm() {
       const result = WEB3FORMS_KEY ? await sendViaWeb3Forms(check.data, WEB3FORMS_KEY) : await sendViaApi(payload);
       if (result.ok) {
         setStatus({ kind: "success" });
-      } else {
+      } else if (result.fields || result.code === "too_fast" || result.code === "rate_limited") {
         if (result.fields) setErrors(result.fields);
-        setStatus({ kind: "error", message: result.message ?? "Your enquiry could not be sent. Please try again." });
+        setStatus({ kind: "error", message: result.message ?? "Please check the form and try again." });
+      } else {
+        setStatus(handoff(check.data, result.code !== "not_configured"));
       }
     } catch {
-      setStatus({ kind: "error", message: "We could not reach the server. Check your connection and try again." });
+      setStatus(handoff(check.data, true));
     }
     requestAnimationFrame(() => statusRef.current?.focus());
+  }
+
+  if (status.kind === "handoff") {
+    const waHref = `${site.whatsapp.href}?text=${encodeURIComponent(status.text)}`;
+    const mailHref = `mailto:${site.publicEmail}?subject=${encodeURIComponent(status.subject)}&body=${encodeURIComponent(status.text)}`;
+    return (
+      <motion.div
+        ref={statusRef}
+        tabIndex={-1}
+        role="status"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="scroll-mt-28 focus:outline-none"
+      >
+        <h2 className="font-display text-2xl font-bold text-midnight-900">Your enquiry is ready — choose how to send it</h2>
+        <p className="mt-3 leading-relaxed text-slate-600">
+          {status.automaticFailed
+            ? "We couldn’t send it automatically just now, so we’ve prepared it for you. "
+            : ""}
+          Tap one option below. Your message opens already written — just press send.
+        </p>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          <a
+            href={waHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-4 rounded-2xl bg-success p-5 text-white transition-opacity hover:opacity-90"
+          >
+            <MessageCircle aria-hidden className="h-7 w-7 shrink-0" />
+            <span>
+              <span className="block text-lg font-semibold">Send on WhatsApp</span>
+              <span className="block text-sm text-white/80">to {site.whatsapp.display}</span>
+            </span>
+            <span className="sr-only">(opens WhatsApp in a new tab)</span>
+          </a>
+          <a
+            href={mailHref}
+            className="group flex items-center gap-4 rounded-2xl bg-midnight-900 p-5 text-white transition-colors hover:bg-accent-strong"
+          >
+            <Mail aria-hidden className="h-7 w-7 shrink-0 text-accent group-hover:text-white" />
+            <span>
+              <span className="block text-lg font-semibold">Send by email</span>
+              <span className="block text-sm text-slate-300 group-hover:text-white">to {site.publicEmail}</span>
+            </span>
+          </a>
+        </div>
+        <details className="mt-6 rounded-xl border border-line bg-mist p-4 text-sm">
+          <summary className="cursor-pointer font-semibold text-midnight-900">Preview your message</summary>
+          <pre className="mt-3 whitespace-pre-wrap font-sans text-slate-600">{status.text}</pre>
+        </details>
+        <button
+          type="button"
+          onClick={() => setStatus({ kind: "idle" })}
+          className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-accent-strong hover:text-midnight-900"
+        >
+          <ArrowLeft aria-hidden className="h-4 w-4" /> Edit my enquiry
+        </button>
+      </motion.div>
+    );
   }
 
   if (status.kind === "success") {
@@ -187,7 +256,7 @@ export function EnquiryForm() {
         role="status"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-success/30 bg-white p-8 shadow-card"
+        className="scroll-mt-28 rounded-2xl border border-success/30 bg-white p-8 shadow-card"
       >
         <CheckCircle2 aria-hidden className="h-10 w-10 text-success" />
         <h2 className="mt-4 font-display text-2xl font-bold text-midnight-900">Thank you — your enquiry has been sent.</h2>
@@ -397,7 +466,7 @@ export function EnquiryForm() {
 
       <CurrencyNote />
 
-      <div ref={statusRef} tabIndex={-1} aria-live="assertive" className="focus:outline-none">
+      <div ref={statusRef} tabIndex={-1} aria-live="assertive" className="scroll-mt-28 focus:outline-none">
         {status.kind === "error" && (
           <div role="alert" className="rounded-xl border border-danger/30 bg-red-50 p-4 text-sm text-danger">
             <p className="flex items-start gap-2 font-semibold">

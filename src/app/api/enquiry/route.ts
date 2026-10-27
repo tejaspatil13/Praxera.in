@@ -4,8 +4,6 @@ import { site } from "@/content/site";
 
 const MAX_BODY_BYTES = 20_000;
 
-// FormSubmit can be slow to respond.
-export const maxDuration = 60;
 
 function json(body: unknown, status: number) {
   return Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -52,9 +50,10 @@ export async function POST(request: Request) {
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.ENQUIRY_TO_EMAIL || site.publicEmail;
   const from = process.env.ENQUIRY_FROM_EMAIL;
-  if (!to) {
-    console.error("[enquiry] No recipient: set ENQUIRY_TO_EMAIL or site.publicEmail.");
-    return json(DELIVERY_FAILED, 500);
+  if (!apiKey || !from || !to) {
+    // No server-side email provider: the form offers WhatsApp / email hand-off instead.
+    // Expected state, not a server failure — the form offers WhatsApp / email hand-off instead.
+    return json({ ok: false, error: "not_configured", message: "Server email delivery is not set up." }, 200);
   }
 
   const rows = enquiryRows(e);
@@ -73,44 +72,14 @@ export async function POST(request: Request) {
   const subject = enquirySubject(e);
 
   try {
-    if (apiKey && from) {
-      // Resend: preferred once a sending domain is verified.
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from, to: to.split(",").map((s) => s.trim()), reply_to: e.email, subject, text, html }),
-      });
-      if (!res.ok) {
-        console.error("[enquiry] Resend responded", res.status, await res.text().catch(() => ""));
-        return json(DELIVERY_FAILED, 502);
-      }
-    } else {
-      // FormSubmit: no account or key needed. The first enquiry triggers a one-time
-      // activation email to the recipient; after that, every enquiry is delivered.
-      const origin = request.headers.get("origin") || site.url || "";
-      const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(to.split(",")[0].trim())}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          ...(origin ? { Origin: origin, Referer: `${origin}/contact` } : {}),
-        },
-        signal: AbortSignal.timeout(55_000),
-        body: JSON.stringify({
-          ...Object.fromEntries(rows),
-          "What they want to improve": e.message,
-          _subject: `${subject} — ${site.name}`,
-          _replyto: e.email,
-          _template: "table",
-          _captcha: "false",
-        }),
-      });
-      const data = (await res.json().catch(() => null)) as { success?: string | boolean; message?: string } | null;
-      if (!res.ok || !data || String(data.success) !== "true") {
-        console.error("[enquiry] FormSubmit responded", res.status, data);
-        return json(DELIVERY_FAILED, 502);
-      }
-      console.info("[enquiry] FormSubmit:", data.message ?? "accepted");
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from, to: to.split(",").map((s) => s.trim()), reply_to: e.email, subject, text, html }),
+    });
+    if (!res.ok) {
+      console.error("[enquiry] Resend responded", res.status, await res.text().catch(() => ""));
+      return json(DELIVERY_FAILED, 502);
     }
   } catch (err) {
     console.error("[enquiry] Delivery error", err);

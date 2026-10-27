@@ -25,11 +25,15 @@ Checks: `npx tsc --noEmit`, `npm run lint`, `npm run build`.
 | `ENQUIRY_TO_EMAIL` | optional | Inbox that receives enquiries. Defaults to `hello@praxera.in`. |
 | `ENQUIRY_FROM_EMAIL` | optional (with Resend) | Sender on a domain verified in Resend, e.g. `Praxera Technologies <enquiries@praxera.in>`. |
 
-Enquiries are emailed to `hello@praxera.in`. Delivery is chosen in this order:
+### Where enquiries arrive
 
-1. **Web3Forms (recommended).** Set `NEXT_PUBLIC_WEB3FORMS_KEY`. Get the key free at web3forms.com by entering hello@praxera.in. The browser sends straight to Web3Forms.
-2. **Resend.** Set `RESEND_API_KEY` and `ENQUIRY_FROM_EMAIL` (requires verifying praxera.in in Resend).
-3. **FormSubmit (no setup).** Used when nothing is set. The first enquiry triggers a one-time activation email to hello@praxera.in. It can be slow or unavailable.
+| Setup | What the visitor does | Where you read it |
+| --- | --- | --- |
+| `NEXT_PUBLIC_WEB3FORMS_KEY` set (recommended) | Clicks **Send enquiry** | Email inbox **hello@praxera.in**, and the Web3Forms dashboard |
+| `RESEND_API_KEY` + `ENQUIRY_FROM_EMAIL` set | Clicks **Send enquiry** | Email inbox **hello@praxera.in** |
+| Nothing set, or automatic sending fails | Chooses **Send on WhatsApp** or **Send by email**; the message opens pre-written | WhatsApp on **+91 77092 88629**, or the **hello@praxera.in** inbox |
+
+hello@praxera.in must be a working mailbox (or forward to one) for email to arrive.
 
 The form only shows success after the provider confirms delivery.
 

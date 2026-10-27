@@ -69,3 +69,11 @@ export function enquiryRows(e: Enquiry): [string, string][] {
 export function enquirySubject(e: Enquiry): string {
   return `Enquiry from ${e.name}${e.company ? ` (${e.company})` : ""}`;
 }
+
+/** Plain-text enquiry, used for WhatsApp and email hand-off. */
+export function enquiryText(e: Enquiry): string {
+  const lines = enquiryRows(e)
+    .filter(([, v]) => v && v !== "—")
+    .map(([k, v]) => `${k}: ${v}`);
+  return `Hello Praxera Technologies,\n\n${e.message}\n\n${lines.join("\n")}`;
+}
