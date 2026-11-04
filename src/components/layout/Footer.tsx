@@ -7,7 +7,7 @@ import { Wordmark } from "./Wordmark";
 export function Footer() {
   const legal = site.legal;
   return (
-    <footer className="on-dark bg-midnight-950 text-slate-300">
+    <footer data-site-chrome className="on-dark bg-midnight-950 text-slate-300">
       <div className="container-page grid gap-12 py-16 md:grid-cols-12">
         <div className="md:col-span-4">
           <Wordmark tone="dark" />

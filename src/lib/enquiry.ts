@@ -10,6 +10,9 @@ export const contactMethods = {
 
 export const MIN_FILL_MS = 2500;
 
+/** Public Web3Forms access key for hello@praxera.in (designed to be exposed in the browser). */
+export const WEB3FORMS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_KEY || "30437669-89ca-44f0-b5d6-bccc1c92d051";
+
 export const enquirySchema = z
   .object({
     name: z.string().trim().min(2, "Please enter your name.").max(100, "Please shorten your name."),

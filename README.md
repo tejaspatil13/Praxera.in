@@ -1,8 +1,9 @@
 # Praxera Technologies — website
 
-Next.js 16 (App Router, TypeScript, Tailwind CSS v4, Motion). Every page is statically prerendered. The only server code is two route handlers:
+Next.js 16 (App Router, TypeScript, Tailwind CSS v4, Motion). Every public page is statically prerendered. The server code is `/admin` plus three route handlers:
 
 - `POST /api/enquiry` validates the contact form and emails it to you through Resend.
+- `POST /api/requirements` saves the `/requirements` form to Postgres.
 - `GET /api/region` reads the visitor's country from the host's edge header (Vercel or Cloudflare) to suggest a currency.
 
 ## Run locally
@@ -24,6 +25,16 @@ Checks: `npx tsc --noEmit`, `npm run lint`, `npm run build`.
 | `RESEND_API_KEY` | optional | API key from resend.com. |
 | `ENQUIRY_TO_EMAIL` | optional | Inbox that receives enquiries. Defaults to `hello@praxera.in`. |
 | `ENQUIRY_FROM_EMAIL` | optional (with Resend) | Sender on a domain verified in Resend, e.g. `Praxera Technologies <enquiries@praxera.in>`. |
+| `ADMIN_PASSWORD` | for `/admin` | Password for the admin page. Sign-in stays off until it is set. |
+| `DATABASE_URL` | for `/admin` | Postgres connection. Vercel adds it when you connect Neon under **Storage**. The table is created on first use. |
+
+### Requirements form and admin
+
+`/requirements` is the link you send to clients. It is not in the menu, sitemap or search results. Its choices, including the budget ranges, are in `src/content/requirements.ts`.
+
+Each submission is saved to the database and emailed to hello@praxera.in. Read and manage them at `/admin`: open a client on WhatsApp, track their status, keep private notes and copy a proposal brief to paste into an AI assistant.
+
+To set it up in Vercel: open the project's **Storage** tab, create a **Neon** Postgres database and connect it to the project, add `ADMIN_PASSWORD` under **Settings → Environment Variables**, then redeploy.
 
 ### Where enquiries arrive
 

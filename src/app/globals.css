@@ -149,3 +149,38 @@ body {
   transform-box: fill-box;
   animation: pulse-ring 2.4s var(--ease-out-soft) infinite;
 }
+
+/* The admin and requirements pages replace the public header and footer. */
+body:has([data-bare]) [data-site-chrome] {
+  display: none;
+}
+
+/* Vertical strip of project work; the track holds two copies, so moving by half loops cleanly. */
+@keyframes marquee-y {
+  to {
+    transform: translateY(-50%);
+  }
+}
+.marquee-y {
+  animation: marquee-y 70s linear infinite;
+  will-change: transform;
+}
+.marquee-y-slow {
+  animation-duration: 80s;
+}
+.marquee-y-fast {
+  animation-duration: 55s;
+}
+.marquee-y-reverse {
+  animation-duration: 65s;
+  animation-direction: reverse;
+}
+.marquee-y-reverse-slow {
+  animation-duration: 90s;
+  animation-direction: reverse;
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-y {
+    animation: none;
+  }
+}

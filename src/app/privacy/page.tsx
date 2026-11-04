@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   const operator = site.legal.entityName ?? site.name;
   return (
-    <LegalPage title="Privacy Policy" updated="27 October 2026">
+    <LegalPage title="Privacy Policy" updated="4 November 2026">
       <p>
         This policy explains what personal information this website collects, why, and what you can do about it. The
         website is operated by {operator} (“Praxera”, “we”, “us”).
@@ -38,6 +38,13 @@ export default function PrivacyPage() {
         browser’s local storage.
       </p>
 
+      <p>
+        If we send you our requirements form, it also collects your WhatsApp number, your business details, the problem you
+        want to solve, and your budget. We store these answers in a secure database and also receive them by
+        email. If you use the Speak button, your browser’s speech service (for example Google or Apple) turns your voice
+        into text. We receive only that text, never a recording.
+      </p>
+
       <h2>Why we use it</h2>
       <p>
         We use your enquiry details only to respond to you, discuss your requirements, and prepare any proposal you ask
@@ -47,15 +54,15 @@ export default function PrivacyPage() {
 
       <h2>Who processes it</h2>
       <p>
-        Enquiries are delivered to us by email through a form-to-email provider (FormSubmit, Web3Forms or Resend), and the website is served by
-        our hosting provider. These providers process data on our behalf to deliver the service and may do so outside
+        Enquiries are delivered to us by email through a form-to-email provider (FormSubmit, Web3Forms or Resend), requirements forms are stored with our database
+        provider (Neon), and the website is served by our hosting provider. These providers process data on our behalf to deliver the service and may do so outside
         your country. If you choose to send your enquiry on WhatsApp or from your own email app, it is
         handled under that service’s own terms and privacy policy.
       </p>
 
       <h2>How long we keep it</h2>
       <p>
-        We keep enquiry emails for as long as needed to respond and to manage any resulting project, and delete enquiries
+        We keep enquiry emails and requirements forms for as long as needed to respond and to manage any resulting project, and delete enquiries
         that do not lead to work within 24 months.
       </p>
 

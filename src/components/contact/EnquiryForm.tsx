@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, Mail, MessageCircle, Send } from "lucide-react";
 import { interests, isInterest } from "@/content/interests";
 import { countryOptions, PRIORITY_COUNT } from "@/content/countries";
-import { contactMethods, enquiryRows, enquirySchema, enquirySubject, enquiryText, fieldErrors, MIN_FILL_MS, type Enquiry } from "@/lib/enquiry";
+import { contactMethods, enquiryRows, enquirySchema, enquirySubject, enquiryText, fieldErrors, MIN_FILL_MS, WEB3FORMS_KEY, type Enquiry } from "@/lib/enquiry";
 import { useRegion } from "@/components/region/RegionProvider";
 import { regionForCountry, regions } from "@/content/pricing";
 import { CurrencyNote } from "@/components/pricing/PricingCards";
@@ -63,8 +63,6 @@ function Field({
 
 const errorsPresent = (e: Record<string, string>) => Object.keys(e).length > 0;
 
-/** Public Web3Forms access key for hello@praxera.in (designed to be exposed in the browser). */
-const WEB3FORMS_KEY = process.env.NEXT_PUBLIC_WEB3FORMS_KEY || "30437669-89ca-44f0-b5d6-bccc1c92d051";
 
 type Result = { ok: boolean; code?: string; message?: string; fields?: Record<string, string> };
 

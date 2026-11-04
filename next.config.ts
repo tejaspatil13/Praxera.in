@@ -22,7 +22,14 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // Voice typing on the requirements form is the only use of the microphone.
+      {
+        source: "/requirements",
+        headers: [{ key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=(), interest-cohort=()" }],
+      },
+    ];
   },
 };
 

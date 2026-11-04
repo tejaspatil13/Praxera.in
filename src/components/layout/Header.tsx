@@ -52,6 +52,7 @@ export function Header() {
 
   return (
     <header
+      data-site-chrome
       className={`on-dark sticky top-0 z-50 border-b transition-colors duration-300 ${
         scrolled || open
           ? "border-white/10 bg-midnight-900/90 backdrop-blur-xl"
