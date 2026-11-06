@@ -1,9 +1,10 @@
 # Praxera Technologies — website
 
-Next.js 16 (App Router, TypeScript, Tailwind CSS v4, Motion). Every public page is statically prerendered. The server code is `/admin` plus three route handlers:
+Next.js 16 (App Router, TypeScript, Tailwind CSS v4, Motion). Public pages are statically prerendered, except the video lists on `/portfolio`. The server code is `/admin` plus four route handlers:
 
 - `POST /api/enquiry` validates the contact form and emails it to you through Resend.
 - `POST /api/requirements` saves the `/requirements` form to Postgres.
+- `POST /api/admin/upload` signs direct video and thumbnail uploads for the signed-in admin.
 - `GET /api/region` reads the visitor's country from the host's edge header (Vercel or Cloudflare) to suggest a currency.
 
 ## Run locally
@@ -26,7 +27,8 @@ Checks: `npx tsc --noEmit`, `npm run lint`, `npm run build`.
 | `ENQUIRY_TO_EMAIL` | optional | Inbox that receives enquiries. Defaults to `hello@praxera.in`. |
 | `ENQUIRY_FROM_EMAIL` | optional (with Resend) | Sender on a domain verified in Resend, e.g. `Praxera Technologies <enquiries@praxera.in>`. |
 | `ADMIN_PASSWORD` | for `/admin` | Password for the admin page. Sign-in stays off until it is set. |
-| `DATABASE_URL` | for `/admin` | Postgres connection. Vercel adds it when you connect Neon under **Storage**. The table is created on first use. |
+| `DATABASE_URL` | for `/admin` | Postgres connection. Vercel adds it when you connect Neon under **Storage**. Tables are created on first use. |
+| `BLOB_READ_WRITE_TOKEN` | for video uploads | Vercel adds it when you connect a Blob store under **Storage**. Videos can still be added by link without it. |
 
 ### Requirements form and admin
 
@@ -35,6 +37,14 @@ Checks: `npx tsc --noEmit`, `npm run lint`, `npm run build`.
 Each submission is saved to the database and emailed to hello@praxera.in. Read and manage them at `/admin`: open a client on WhatsApp, track their status, keep private notes and copy a proposal brief to paste into an AI assistant.
 
 To set it up in Vercel: open the project's **Storage** tab, create a **Neon** Postgres database and connect it to the project, add `ADMIN_PASSWORD` under **Settings → Environment Variables**, then redeploy.
+
+### Video portfolio
+
+`/portfolio` is the video editing portfolio. It is separate from the business site and not in the main menu. Its fixed wording is in `src/content/portfolio.ts`.
+
+Manage videos at `/admin/videos`. Upload a video file up to 500 MB, which needs a public Blob store connected under **Storage**, or paste an Instagram, YouTube, Vimeo, Google Drive, Cloudinary or direct `.mp4` link. Uploads get a thumbnail automatically. Featured videos appear first. Changes appear on the next page load. Instagram’s player can send visitors away to Instagram, so upload the file when a video must play on the site.
+
+The starter videos are added once, when the table is first created. Until a database is connected, or if it is unreachable, `/portfolio` shows them from `src/content/portfolio.ts`.
 
 ### Where enquiries arrive
 

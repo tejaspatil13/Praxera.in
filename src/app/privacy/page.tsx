@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   const operator = site.legal.entityName ?? site.name;
   return (
-    <LegalPage title="Privacy Policy" updated="4 November 2026">
+    <LegalPage title="Privacy Policy" updated="6 November 2026">
       <p>
         This policy explains what personal information this website collects, why, and what you can do about it. The
         website is operated by {operator} (“Praxera”, “we”, “us”).
@@ -58,6 +58,8 @@ export default function PrivacyPage() {
         provider (Neon), and the website is served by our hosting provider. These providers process data on our behalf to deliver the service and may do so outside
         your country. If you choose to send your enquiry on WhatsApp or from your own email app, it is
         handled under that service’s own terms and privacy policy.
+        Videos on our portfolio page may play through Instagram, YouTube, Vimeo or Google Drive. Those players load only when you press play, and those companies’ own
+        privacy policies then apply.
       </p>
 
       <h2>How long we keep it</h2>

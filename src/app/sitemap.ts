@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { site } from "@/content/site";
 import { callList, leadKaro } from "@/content/caseStudies";
 
-const paths = ["/", "/services", "/case-studies", callList.href, leadKaro.href, "/about", "/pricing", "/contact", "/privacy", "/terms"];
+const paths = ["/", "/services", "/case-studies", callList.href, leadKaro.href, "/about", "/portfolio", "/pricing", "/contact", "/privacy", "/terms"];
 
 export default function sitemap(): MetadataRoute.Sitemap {
   if (!site.url) return [];

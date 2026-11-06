@@ -184,3 +184,181 @@ body:has([data-bare]) [data-site-chrome] {
     animation: none;
   }
 }
+
+/* ---------- /portfolio ---------- */
+/* Darkroom: true black, ivory and safelight red. The reels are teal and blue, so red makes them stand out. */
+.pf {
+  --pf-bg: #000000;
+  --pf-panel: #0c0c0c;
+  --pf-panel-2: #000000;
+  --pf-line: rgb(246 240 230 / 0.13);
+  --pf-dim: #b5a99c;
+  --color-accent: #ff2a3c;
+  --color-accent-soft: #ffe0e3;
+  --color-accent-strong: #ff2a3c;
+  --color-accent-deep: #c20f22;
+  --color-slate-200: #efe7da;
+  --color-slate-300: #d5cabb;
+  --color-slate-400: #b5a99c;
+  --color-slate-500: #8c8175;
+  background: var(--pf-bg);
+  color: #f6f0e6;
+  overflow-x: clip;
+}
+.pf ::selection {
+  background: var(--color-accent);
+  color: #000000;
+}
+/* The About panel. Darker red keeps small text readable on white. */
+.pf-light {
+  position: relative;
+  z-index: 61;
+  --pf-line: rgb(20 15 12 / 0.14);
+  --pf-dim: #6a5f54;
+  --color-accent: #d10f22;
+  --color-slate-300: #40382f;
+  background: #ffffff;
+  color: #14100d;
+}
+.pf-poster {
+  font-family: var(--font-poster), var(--font-display), sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  line-height: 0.96;
+  text-transform: uppercase;
+}
+.pf-serif {
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+  font-weight: 400;
+}
+.pf-outline {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgb(246 240 230 / 0.42);
+}
+
+/* Moving film grain, drawn as dark specks only: they cannot show on true black, and no blending means no full-page repaint. */
+@keyframes pf-grain {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-3%, 2%); }
+  40% { transform: translate(2%, -4%); }
+  60% { transform: translate(-2%, 3%); }
+  80% { transform: translate(4%, -2%); }
+  100% { transform: translate(0, 0); }
+}
+.pf-grain {
+  position: fixed;
+  inset: -10%;
+  z-index: 60;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.6 -.4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.11;
+  pointer-events: none;
+  will-change: transform;
+  animation: pf-grain 0.7s steps(1) infinite;
+}
+
+/* Light leaks drifting across the frame. Soft gradients, because blur and blending filters repaint every frame. */
+@keyframes pf-leak {
+  0%, 100% { transform: translate3d(-12%, -6%, 0) scale(1); opacity: 0.55; }
+  50% { transform: translate3d(14%, 8%, 0) scale(1.35); opacity: 0.95; }
+}
+.pf-leak {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation: pf-leak 11s ease-in-out infinite;
+}
+
+/* A slow push in and pull out on still frames. */
+@keyframes pf-kenburns {
+  0%, 100% { transform: scale(1.02); }
+  50% { transform: scale(1.14) translateY(-1.5%); }
+}
+.pf-kenburns {
+  animation: pf-kenburns 15s ease-in-out infinite;
+}
+
+/* A short colour-split glitch every few seconds. */
+@keyframes pf-split {
+  0%, 91%, 100% { text-shadow: none; transform: none; }
+  92% { text-shadow: 5px 0 #ffffff, -5px 0 #2fd3c6; transform: translateX(2px); }
+  94% { text-shadow: -7px 0 #ffffff, 7px 0 #2fd3c6; transform: translateX(-3px) scale(1.012); }
+  96% { text-shadow: 3px 0 #ffffff, -3px 0 #2fd3c6; transform: none; }
+}
+.pf-split {
+  animation: pf-split 6s linear infinite;
+}
+
+/* One bright frame as the leader cuts to the picture. */
+@keyframes pf-flash {
+  0% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+.pf-flash {
+  animation: pf-flash 0.7s ease-out forwards;
+}
+
+.pf-crop::before,
+.pf-crop::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--color-accent);
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.4s var(--ease-out-soft);
+  pointer-events: none;
+  z-index: 3;
+}
+.pf-crop::before {
+  top: 10px;
+  left: 10px;
+  border-right: 0;
+  border-bottom: 0;
+  transform: translate(8px, 8px);
+}
+.pf-crop::after {
+  right: 10px;
+  bottom: 10px;
+  border-left: 0;
+  border-top: 0;
+  transform: translate(-8px, -8px);
+}
+.pf-crop:hover::before,
+.pf-crop:hover::after,
+.pf-crop:focus-within::before,
+.pf-crop:focus-within::after {
+  opacity: 1;
+  transform: none;
+}
+.pf-sprockets {
+  background-image: repeating-linear-gradient(90deg, rgb(246 240 230 / 0.18) 0 10px, transparent 10px 26px);
+  height: 5px;
+}
+@keyframes pf-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.pf-marquee {
+  animation: pf-marquee 34s linear infinite;
+}
+@keyframes pf-rec {
+  50% {
+    opacity: 0.25;
+  }
+}
+.pf-rec {
+  animation: pf-rec 1.4s steps(2) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pf-marquee,
+  .pf-rec,
+  .pf-grain,
+  .pf-leak,
+  .pf-kenburns,
+  .pf-split {
+    animation: none;
+  }
+}

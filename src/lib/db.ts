@@ -18,7 +18,7 @@ export const dbConfigured = () => !!connectionString();
 let schemaReady: Promise<unknown> | undefined;
 
 /** Answers stay in one JSON column so the form can change without a database migration. */
-async function db() {
+export async function db() {
   const sql = neon(connectionString()!);
   schemaReady ??= sql`
     CREATE TABLE IF NOT EXISTS requirements (
