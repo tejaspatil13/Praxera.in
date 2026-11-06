@@ -17,6 +17,9 @@ type Row = {
 
 export type VideoFields = Omit<PortfolioVideo, "id">;
 
+/** Vercel connects Blob stores with BLOB_STORE_ID now. Older connections and local setups use the static token. */
+export const blobConfigured = () => !!(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN);
+
 const toVideo = (r: Row): PortfolioVideo => ({
   id: r.id,
   title: r.title,

@@ -7,7 +7,7 @@ import { z } from "zod";
 import { isAdmin } from "@/lib/adminAuth";
 import { videoCategories } from "@/content/portfolio";
 import { parseVideoUrl, videoProviders, type ParsedVideo } from "@/lib/videoSource";
-import { createVideo, deleteVideo, getVideo, moveVideo as move, setVideoFlag, updateVideo } from "@/lib/videos";
+import { blobConfigured, createVideo, deleteVideo, getVideo, moveVideo as move, setVideoFlag, updateVideo } from "@/lib/videos";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -52,7 +52,7 @@ const autoThumbnail = async (v: ParsedVideo) => v.poster ?? (v.provider === "vim
 
 /** Removes a file from our storage. Links to other hosts are left alone. */
 async function removeStored(url: string | undefined) {
-  if (!url || !process.env.BLOB_READ_WRITE_TOKEN || !new URL(url, "https://x").hostname.endsWith(".blob.vercel-storage.com")) return;
+  if (!url || !blobConfigured() || !new URL(url, "https://x").hostname.endsWith(".blob.vercel-storage.com")) return;
   await del(url).catch(() => {});
 }
 

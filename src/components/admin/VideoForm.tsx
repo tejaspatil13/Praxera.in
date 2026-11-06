@@ -2,7 +2,7 @@
 
 import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { upload } from "@vercel/blob/client";
+import { uploadPresigned } from "@vercel/blob/client";
 import { AlertCircle, CheckCircle2, Image as ImageIcon, Link2, Loader2, Trash2, Upload } from "lucide-react";
 import { removeVideo, saveVideo } from "@/app/admin/videos/actions";
 import { videoCategories, type PortfolioVideo } from "@/content/portfolio";
@@ -64,7 +64,7 @@ function useFileUpload(kind: keyof typeof LIMITS, onDone: (url: string) => void)
     // A last progress event can arrive after the upload resolves, and must not reopen the progress bar.
     let finished = false;
     try {
-      const blob = await upload(`portfolio/${file.name.replace(/[^\w.-]+/g, "-")}`, file, {
+      const blob = await uploadPresigned(`portfolio/${file.name.replace(/[^\w.-]+/g, "-")}`, file, {
         access: "public",
         handleUploadUrl: "/api/admin/upload",
         clientPayload: kind,

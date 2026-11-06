@@ -28,7 +28,7 @@ Checks: `npx tsc --noEmit`, `npm run lint`, `npm run build`.
 | `ENQUIRY_FROM_EMAIL` | optional (with Resend) | Sender on a domain verified in Resend, e.g. `Praxera Technologies <enquiries@praxera.in>`. |
 | `ADMIN_PASSWORD` | for `/admin` | Password for the admin page. Sign-in stays off until it is set. |
 | `DATABASE_URL` | for `/admin` | Postgres connection. Vercel adds it when you connect Neon under **Storage**. Tables are created on first use. |
-| `BLOB_READ_WRITE_TOKEN` | for video uploads | Vercel adds it when you connect a Blob store under **Storage**. Videos can still be added by link without it. |
+| `BLOB_STORE_ID` | for video uploads | Vercel adds it when you connect a Blob store under **Storage**. Outside Vercel, set `BLOB_READ_WRITE_TOKEN` instead. Videos can still be added by link without either. |
 
 ### Requirements form and admin
 

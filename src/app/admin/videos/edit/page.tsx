@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { VideoForm } from "@/components/admin/VideoForm";
 import { isAdmin } from "@/lib/adminAuth";
 import { dbConfigured } from "@/lib/db";
-import { getVideo, listVideos } from "@/lib/videos";
+import { blobConfigured, getVideo, listVideos } from "@/lib/videos";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -25,7 +25,7 @@ async function Edit({ searchParams }: { searchParams: PageProps<"/admin/videos/e
         <ArrowLeft aria-hidden className="h-4 w-4" /> All videos
       </Link>
       <h1 className="mt-5 font-display text-2xl font-bold text-midnight-900">{video ? "Edit video" : "Add new video"}</h1>
-      <VideoForm video={video} nextOrder={nextOrder} uploadsEnabled={!!process.env.BLOB_READ_WRITE_TOKEN} />
+      <VideoForm video={video} nextOrder={nextOrder} uploadsEnabled={blobConfigured()} />
     </>
   );
 }
