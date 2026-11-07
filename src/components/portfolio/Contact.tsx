@@ -110,7 +110,7 @@ export function Contact() {
           <ContactForm />
         </div>
         <footer className="mt-20 flex flex-wrap justify-between gap-3 border-t border-[var(--pf-line)] pt-6 text-sm text-[var(--pf-dim)]">
-          <p>© {site.copyrightYear} {site.name}. {profile.location}.</p>
+          <p>© {site.copyrightYear} {profile.name}. {profile.location}.</p>
           <Link href="/" className="hover:text-accent">praxera.in</Link>
         </footer>
       </div>

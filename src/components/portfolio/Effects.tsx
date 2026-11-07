@@ -19,11 +19,12 @@ export function LightLeaks() {
   );
 }
 
-const wall = ["/portfolio/wall-dental.mp4", "/portfolio/wall-research.mp4", "/portfolio/wall-calls.mp4"];
+const wall = ["dental", "globe", "calls"];
 
 /**
  * Scrolling opens a giant word onto a wall of reels. The reels stay at their true 9:16 shape and full resolution,
- * because cropping them to a wide screen or zooming them far makes them blurry. Phones show the middle one.
+ * because cropping them to a wide screen or zooming them far makes them blurry. Phones show two side by side.
+ * Each reel has a still, so the word is never black on black while it loads.
  */
 export function ZoomThrough() {
   const ref = useRef<HTMLElement>(null);
@@ -38,10 +39,10 @@ export function ZoomThrough() {
   if (reduced) return null;
   return (
     <section ref={ref} aria-hidden className="relative h-[220vh]">
-      <div className="sticky top-0 h-dvh overflow-hidden">
+      <div className="sticky top-0 h-lvh overflow-hidden">
         <motion.div style={{ scale: settle }} className="absolute inset-0 flex items-center justify-center gap-2 will-change-transform lg:gap-3">
-          {wall.map((src, i) => (
-            <LoopVideo key={src} src={src} className={`h-full w-full object-cover lg:aspect-[9/16] lg:w-auto lg:rounded-xl ${i === 1 ? "" : "hidden lg:block"}`} />
+          {wall.map((name, i) => (
+            <LoopVideo key={name} src={`/portfolio/wall-${name}.mp4`} poster={`/portfolio/wall-${name}.jpg`} moving={`/portfolio/wall-${name}.webp`} ahead="150%" className={`aspect-[9/16] w-[calc(50%-0.25rem)] rounded-lg object-cover lg:h-full lg:w-auto lg:rounded-xl ${i === 2 ? "hidden lg:block" : ""}`} />
           ))}
         </motion.div>
         {/* A solid black sheet with the word cut out. It is drawn once, then only scaled, so the videos behind stay smooth. */}
@@ -50,7 +51,7 @@ export function ZoomThrough() {
             <defs>
               <mask id="pf-play">
                 <rect width="100%" height="100%" fill="white" />
-                <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" fill="black" className="pf-poster text-[clamp(13.5rem,54vw,51rem)]">
+                <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" fill="black" className="pf-poster text-[78vw] md:text-[clamp(13.5rem,54vw,51rem)]">
                   PLAY
                 </text>
               </mask>

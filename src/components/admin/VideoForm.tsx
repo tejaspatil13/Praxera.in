@@ -179,7 +179,7 @@ function VideoUpload({ current, onDone, onBusy, onPicked }: { current: string; o
       >
         {busy ? <Loader2 aria-hidden className="h-7 w-7 animate-spin text-accent-strong" /> : <Upload aria-hidden className="h-7 w-7 text-accent-strong" />}
         <span className="font-semibold text-midnight-900">{busy ? `Uploading ${progress}%` : current ? "Choose a different video" : "Choose a video to upload"}</span>
-        <span className="text-sm text-slate-500">{busy ? "Please keep this page open." : "Or drag it here. MP4, WebM or MOV, up to 500 MB."}</span>
+        <span className="text-sm text-slate-500">{busy ? "Please keep this page open." : "Or drag it here. MP4, WebM or MOV, up to 500 MB. For quick playback on phones, export at 720p and keep reels under 10 MB."}</span>
       </button>
       {busy ? <Progress value={progress} /> : null}
       {current && !busy ? (

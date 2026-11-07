@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, useMotionValue, useSpring } from "motion/react";
 
 export const ease = [0.22, 1, 0.36, 1] as const;
@@ -25,25 +25,48 @@ export function MaskedLines({ lines, className = "", delay = 0, animate }: { lin
   );
 }
 
-/** A silent background loop that only runs while on screen, so it never competes with the video someone pressed. */
-export function LoopVideo({ src, poster, className }: { src: string; poster?: string; className?: string }) {
+/**
+ * A silent background loop that only runs while on screen, so it never competes with the video someone pressed.
+ * Loading starts ahead of time, but playback waits for the screen: iPhones pause a muted video started off screen and never resume it.
+ * Low Power Mode and some browsers refuse background video outright, so `moving` swaps in an animated image, which they still run.
+ */
+export function LoopVideo({ src, poster, moving, className, ahead = "60%" }: { src: string; poster?: string; moving?: string; className?: string; ahead?: string }) {
   const ref = useRef<HTMLVideoElement>(null);
+  const [refused, setRefused] = useState(false);
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
-    // Starts just before it scrolls in, so decoding never begins in the middle of a scroll.
-    const observer = new IntersectionObserver(
+    let visible = false;
+    const stopped = () => {
+      if (visible) setRefused(true);
+    };
+    const near = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return video.pause();
+        if (!entry.isIntersecting) return;
         // These clips are small. Loading each fully frees its connection for the video someone presses.
         video.preload = "auto";
-        void video.play().catch(() => {});
+        near.disconnect();
       },
-      { rootMargin: "60% 0px" },
+      { rootMargin: `${ahead} 0px` },
     );
-    observer.observe(video);
-    return () => observer.disconnect();
-  }, []);
+    const onScreen = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (!visible) return video.pause();
+      void video.play().catch((err: Error) => {
+        if (err.name === "NotAllowedError") stopped();
+      });
+    });
+    video.addEventListener("pause", stopped);
+    near.observe(video);
+    onScreen.observe(video);
+    return () => {
+      near.disconnect();
+      onScreen.disconnect();
+      video.removeEventListener("pause", stopped);
+    };
+  }, [ahead]);
+  // eslint-disable-next-line @next/next/no-img-element
+  if (refused && moving) return <img src={moving} alt="" aria-hidden className={className} />;
   return <video ref={ref} src={src} poster={poster} muted loop playsInline preload="none" aria-hidden className={className} />;
 }
 

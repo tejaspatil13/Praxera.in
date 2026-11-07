@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 import { db, dbConfigured } from "@/lib/db";
 import { starterVideos, type PortfolioVideo, type VideoCategory } from "@/content/portfolio";
 
@@ -122,13 +122,22 @@ export async function deleteVideo(id: string) {
 
 const starters = () => starterVideos.map((v, i) => ({ ...v, id: `starter-${i}` }));
 
-/** Never throws: the public page falls back to the starter videos if the database is unavailable. */
-export const publicVideos = cache(async (): Promise<PortfolioVideo[]> => {
+export const VIDEOS_TAG = "portfolio-videos";
+
+/**
+ * Cached so the list and its thumbnails arrive with the page instead of waiting on the database. The admin clears this on every change.
+ * Never throws: the public page falls back to the starter videos if the database is unavailable, and asks again soon.
+ */
+export async function publicVideos(): Promise<PortfolioVideo[]> {
+  "use cache";
+  cacheTag(VIDEOS_TAG);
+  cacheLife("hours");
   if (!dbConfigured()) return starters();
   try {
     const published = (await listVideos()).filter((v) => v.published);
     return [...published.filter((v) => v.featured), ...published.filter((v) => !v.featured)];
   } catch {
+    cacheLife("seconds");
     return starters();
   }
-});
+}

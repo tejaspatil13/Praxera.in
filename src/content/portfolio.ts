@@ -41,8 +41,8 @@ export type PortfolioVideo = {
 /** Hosted with the site so they play here. Shown until the database is connected, and added to it the first time it is created. */
 export const starterVideos: Omit<PortfolioVideo, "id">[] = [
   {
-    title: "Praxera Reel Cut",
-    description: "A fast cut across recent Praxera reels: type-led motion, interface animation and voiceover.",
+    title: "Reel Cut",
+    description: "A fast cut across recent reels: type-led motion, interface animation and voiceover.",
     category: "Motion Graphics",
     thumbnailUrl: "/portfolio/poster-showreel.jpg",
     sourceType: "file",

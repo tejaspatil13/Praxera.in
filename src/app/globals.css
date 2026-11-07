@@ -279,6 +279,33 @@ body:has([data-bare]) [data-site-chrome] {
   animation: pf-kenburns 15s ease-in-out infinite;
 }
 
+/* A prompt resolves into a finished frame, tile by tile. Every look replays it, and the frame resets instantly once it is off screen. */
+.pf-gen-prompt {
+  width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.pf-gen-scan {
+  top: 0;
+  opacity: 0;
+}
+.pf-gen[data-on="true"] .pf-gen-prompt {
+  width: 100%;
+  transition: width 1.2s steps(38);
+}
+.pf-gen[data-on="true"] .pf-gen-tile {
+  opacity: 0;
+  transition: opacity 0.35s var(--tile-delay);
+}
+.pf-gen[data-on="true"] .pf-gen-scan {
+  animation: pf-gen-scan 2.2s 0.3s ease-in-out;
+}
+@keyframes pf-gen-scan {
+  0% { top: 0; opacity: 1; }
+  99% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
 /* A short colour-split glitch every few seconds. */
 @keyframes pf-split {
   0%, 91%, 100% { text-shadow: none; transform: none; }
@@ -288,6 +315,22 @@ body:has([data-bare]) [data-site-chrome] {
 }
 .pf-split {
   animation: pf-split 6s linear infinite;
+}
+
+/* Phones keep the picture first: no countdown over it, and fewer full-screen layers while scrolling. */
+@media (max-width: 767px) {
+  .pf-leader,
+  .pf-grain {
+    display: none;
+  }
+  .pf-leak {
+    animation: none;
+    will-change: auto;
+    opacity: 0.75;
+  }
+  .pf-crop .pf-kenburns {
+    animation: none;
+  }
 }
 
 /* One bright frame as the leader cuts to the picture. */
@@ -358,6 +401,7 @@ body:has([data-bare]) [data-site-chrome] {
   .pf-grain,
   .pf-leak,
   .pf-kenburns,
+  .pf-gen-scan,
   .pf-split {
     animation: none;
   }

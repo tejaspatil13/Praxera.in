@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Anton, Instrument_Serif } from "next/font/google";
-import { connection } from "next/server";
+import { preload } from "react-dom";
 import { About } from "@/components/portfolio/About";
 import { AiSection } from "@/components/portfolio/AiSection";
 import { Contact } from "@/components/portfolio/Contact";
@@ -13,15 +13,14 @@ import { Timeline } from "@/components/portfolio/Timeline";
 import { Workflow } from "@/components/portfolio/Workflow";
 import { WorkGallery, WorkSkeleton } from "@/components/portfolio/WorkGallery";
 import { profile } from "@/content/portfolio";
-import { site } from "@/content/site";
 import { canonical } from "@/lib/seo";
 import { publicVideos } from "@/lib/videos";
 
 const poster = Anton({ variable: "--font-poster", subsets: ["latin"], weight: "400", display: "swap" });
 const serif = Instrument_Serif({ variable: "--font-serif", subsets: ["latin"], weight: "400", style: "italic", display: "swap" });
 
-const title = "Tejas Patil | Video Editor & AI-Powered Creative Producer – Praxera Technologies";
-const description = "Scroll-stopping Instagram reels, cinematic brand films, motion graphics and AI-powered video production by Tejas Patil at Praxera Technologies.";
+const title = "Tejas Patil | Video Editor & AI-Powered Creative Producer";
+const description = "Scroll-stopping Instagram reels, cinematic brand films, motion graphics and AI-powered video production by Tejas Patil.";
 
 export const metadata: Metadata = {
   title: { absolute: title },
@@ -36,16 +35,15 @@ const personJsonLd = {
   "@type": "Person",
   name: profile.name,
   jobTitle: profile.roles[0],
-  worksFor: { "@type": "Organization", name: site.name },
   sameAs: [profile.linkedin, profile.github, profile.instagram],
 };
 
 async function WorkFromAdmin() {
-  await connection();
   return <WorkGallery videos={await publicVideos()} />;
 }
 
 export default function PortfolioPage() {
+  for (const name of ["dental", "research", "calls"]) preload(`/portfolio/poster-${name}.jpg`, { as: "image", fetchPriority: "high" });
   return (
     <div data-bare className={`pf on-dark relative ${poster.variable} ${serif.variable}`}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd).replace(/</g, "\\u003c") }} />

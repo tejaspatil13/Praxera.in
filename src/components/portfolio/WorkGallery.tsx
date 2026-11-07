@@ -22,7 +22,7 @@ export function WorkSkeleton() {
   );
 }
 
-function Card({ video, index, active, onStart }: { video: PortfolioVideo; index: number; active: boolean; onStart: () => void }) {
+function Card({ video, index, active, busy, onStart }: { video: PortfolioVideo; index: number; active: boolean; busy: boolean; onStart: () => void }) {
   const item = useRef<HTMLLIElement>(null);
   // Uploaded files can be any shape, so the file itself corrects this once it loads.
   const [vertical, setVertical] = useState(parseVideoUrl(video.videoUrl)?.vertical ?? false);
@@ -42,13 +42,14 @@ function Card({ video, index, active, onStart }: { video: PortfolioVideo; index:
       className={`scroll-mb-14 scroll-mt-6 ${active ? "col-span-2 md:col-span-1" : ""}`}
     >
       <motion.div
-        variants={{ hidden: { clipPath: "inset(14% 14% 14% 14% round 28px)", scale: 1.16, opacity: 0 }, shown: { clipPath: "inset(0% 0% 0% 0% round 16px)", scale: 1, opacity: 1 } }}
-        transition={{ duration: 1, delay: (index % 4) * 0.1, ease }}
+        variants={{ hidden: { clipPath: "inset(5% 5% 5% 5% round 24px)", scale: 1.05 }, shown: { clipPath: "inset(0% 0% 0% 0% round 16px)", scale: 1 } }}
+        transition={{ duration: 0.8, delay: (index % 4) * 0.08, ease }}
         className={`pf-crop relative overflow-hidden rounded-2xl bg-black ring-2 transition-shadow duration-300 ${active ? "ring-accent" : "ring-transparent"} ${active && !vertical ? "aspect-video md:aspect-[9/16]" : "aspect-[9/16]"}`}
       >
         <VideoPlayer
           video={video}
           active={active}
+          busy={busy}
           onShape={setVertical}
           onStart={() => {
             onStart();
@@ -100,7 +101,7 @@ export function WorkGallery({ videos }: { videos: PortfolioVideo[] }) {
       ) : (
         <ul className={grid}>
           {shown.map((v, i) => (
-            <Card key={v.id} video={v} index={i} active={active === v.id} onStart={() => setActive(v.id)} />
+            <Card key={v.id} video={v} index={i} active={active === v.id} busy={active !== null} onStart={() => setActive(v.id)} />
           ))}
         </ul>
       )}

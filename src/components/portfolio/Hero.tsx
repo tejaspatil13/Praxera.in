@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { AnimatePresence, motion, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
 import { ArrowDown, ArrowRight } from "lucide-react";
-import { Wordmark } from "@/components/layout/Wordmark";
 import { chapters, profile } from "@/content/portfolio";
 import { LightLeaks } from "./Effects";
 import { LoopVideo, Magnetic, MaskedLines, ease } from "./shared";
@@ -16,35 +14,36 @@ const reels = [
   { poster: "/portfolio/poster-showreel.jpg" },
 ];
 
-function Tile({ reel, motionOk }: { reel: (typeof reels)[number]; motionOk: boolean }) {
+/** Phones run one strip of loops only: the poster is already there, and several decoders at once slow the scroll. */
+function Tile({ reel, motionOk, phone }: { reel: (typeof reels)[number]; motionOk: boolean; phone: boolean }) {
   return (
     <div className="relative aspect-[9/16] w-full shrink-0 overflow-hidden rounded-lg bg-[var(--pf-panel)]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={reel.poster} alt="" className="absolute inset-0 h-full w-full object-cover" />
-      {reel.loop && motionOk ? <LoopVideo src={reel.loop} poster={reel.poster} className="absolute inset-0 h-full w-full object-cover" /> : null}
+      {reel.loop && motionOk ? <LoopVideo src={reel.loop} poster={reel.poster} className={`absolute inset-0 h-full w-full object-cover ${phone ? "" : "hidden sm:block"}`} /> : null}
     </div>
   );
 }
 
-function Strip({ offset, y, motionOk, className }: { offset: number; y: ReturnType<typeof useTransform<number, string>>; motionOk: boolean; className?: string }) {
+function Strip({ offset, y, motionOk, phone = false }: { offset: number; y: ReturnType<typeof useTransform<number, string>>; motionOk: boolean; phone?: boolean }) {
   const order = reels.map((_, i) => reels[(i + offset) % reels.length]);
   return (
-    <motion.div style={{ y }} className={`flex w-1/3 flex-col gap-3 ${className ?? ""}`}>
+    <motion.div style={{ y }} className="flex w-1/3 flex-col gap-3">
       {[...order, ...order].map((r, i) => (
-        <Tile key={i} reel={r} motionOk={motionOk && i < 2} />
+        <Tile key={i} reel={r} motionOk={motionOk && i < 2} phone={phone} />
       ))}
     </motion.div>
   );
 }
 
-/** A film leader counts in once per visit. It is decoration, so it never waits on anything loading. */
+/** A film leader counts in once per visit on larger screens. It is decoration, so phones skip it and go straight to the picture. */
 function Leader({ onDone }: { onDone: () => void }) {
   const [count, setCount] = useState(3);
   const [gone, setGone] = useState(false);
   const reduced = useReducedMotion();
 
   useEffect(() => {
-    let seen = !!reduced;
+    let seen = !!reduced || innerWidth < 768;
     try {
       seen ||= !!sessionStorage.getItem("pf-leader");
       sessionStorage.setItem("pf-leader", "1");
@@ -63,7 +62,7 @@ function Leader({ onDone }: { onDone: () => void }) {
   return (
     <AnimatePresence>
       {gone ? null : (
-        <motion.div aria-hidden exit={{ clipPath: "inset(0 0 100% 0)" }} transition={{ duration: 0.7, ease }} style={{ clipPath: "inset(0 0 0 0)" }} className="fixed inset-0 z-[90] flex items-center justify-center bg-[var(--pf-bg)]">
+        <motion.div aria-hidden exit={{ clipPath: "inset(0 0 100% 0)" }} transition={{ duration: 0.7, ease }} style={{ clipPath: "inset(0 0 0 0)" }} className="pf-leader fixed inset-0 z-[90] flex items-center justify-center bg-[var(--pf-bg)]">
           <span className="absolute h-px w-full bg-white/15" />
           <span className="absolute h-full w-px bg-white/15" />
           <span className="pf-poster relative flex h-44 w-44 items-center justify-center rounded-full border border-white/25 text-7xl">{count}</span>
@@ -114,7 +113,7 @@ export function Hero() {
         {/* The picture pulls back into place as the leader clears. */}
         <motion.div initial={{ scale: 1.5 }} animate={ready ? { scale: 1 } : undefined} transition={{ duration: 1.8, ease }} className="flex h-full w-full gap-3 px-3">
           <Strip offset={0} y={yA} motionOk={!reduced} />
-          <Strip offset={1} y={yB} motionOk={!reduced} />
+          <Strip offset={1} y={yB} motionOk={!reduced} phone />
           <Strip offset={2} y={yC} motionOk={!reduced} />
         </motion.div>
       </motion.div>
@@ -126,9 +125,9 @@ export function Hero() {
       {ready ? <div aria-hidden className="pf-flash pointer-events-none absolute inset-0 z-20 bg-[#ffd6da]" /> : null}
 
       <header className="relative z-10 mx-auto flex w-full max-w-[96rem] items-center justify-between px-5 py-5 lg:px-10">
-        <Link href="/" aria-label="Praxera Technologies home">
-          <Wordmark tone="dark" />
-        </Link>
+        <a href="#top" className="pf-poster text-2xl tracking-wide">
+          {profile.name}
+        </a>
         <nav aria-label="Portfolio" className="hidden items-center gap-7 text-sm text-slate-300 md:flex">
           {links.map((l) => (
             <a key={l.id} href={`#${l.id}`} className="transition-colors hover:text-accent">
@@ -148,12 +147,12 @@ export function Hero() {
           {profile.name} <span className="text-[var(--pf-dim)]">/ {profile.roles[0]}</span>
         </motion.p>
         <h1 id="hero-title" className="pf-poster mt-4 text-[clamp(3.1rem,min(10.6vw,13vh),10.5rem)]">
-          <MaskedLines animate={ready} delay={0.15} lines={["We don’t just", "edit videos."]} />
-          <MaskedLines animate={ready} delay={0.33} lines={["We create", <span key="x" className="pf-split inline-block text-accent">experiences.</span>]} />
+          <MaskedLines animate={ready} delay={0.15} lines={["I don’t just", "edit videos."]} />
+          <MaskedLines animate={ready} delay={0.33} lines={["I create", <span key="x" className="pf-split inline-block text-accent">experiences.</span>]} />
         </h1>
         <motion.div initial={{ opacity: 0, y: 16 }} animate={ready ? { opacity: 1, y: 0 } : undefined} transition={{ duration: 0.7, delay: 0.7, ease }} className="mt-5 max-w-xl">
           <p className="text-base leading-relaxed text-slate-200 sm:text-lg">
-            From scroll-stopping Instagram reels to cinematic brand films, we transform ideas and raw footage into powerful visual stories.
+            From scroll-stopping Instagram reels to cinematic brand films, I transform ideas and raw footage into powerful visual stories.
           </p>
           <p className="mt-3 text-sm text-[var(--pf-dim)]">{profile.roles.join(" · ")}</p>
           <div className="mt-5 flex flex-wrap gap-3">

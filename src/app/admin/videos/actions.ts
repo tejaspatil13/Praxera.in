@@ -1,13 +1,13 @@
 "use server";
 
 import { del } from "@vercel/blob";
-import { refresh } from "next/cache";
+import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { isAdmin } from "@/lib/adminAuth";
 import { videoCategories } from "@/content/portfolio";
 import { parseVideoUrl, videoProviders, type ParsedVideo } from "@/lib/videoSource";
-import { blobConfigured, createVideo, deleteVideo, getVideo, moveVideo as move, setVideoFlag, updateVideo } from "@/lib/videos";
+import { blobConfigured, createVideo, deleteVideo, getVideo, moveVideo as move, setVideoFlag, updateVideo, VIDEOS_TAG } from "@/lib/videos";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -95,6 +95,7 @@ export async function saveVideo(_prev: string, form: FormData) {
   } catch {
     return "The video could not be saved. Please try again.";
   }
+  updateTag(VIDEOS_TAG);
   redirect("/admin/videos");
 }
 
@@ -103,12 +104,14 @@ export async function toggleFlag(form: FormData) {
   const flag = form.get("flag");
   if (flag !== "featured" && flag !== "published") return;
   await setVideoFlag(id, flag, form.get("value") === "true");
+  updateTag(VIDEOS_TAG);
   refresh();
 }
 
 export async function reorder(form: FormData) {
   const id = await requireId(form);
   await move(id, form.get("direction") === "up" ? -1 : 1);
+  updateTag(VIDEOS_TAG);
   refresh();
 }
 
@@ -118,5 +121,6 @@ export async function removeVideo(form: FormData) {
   await deleteVideo(id);
   await removeStored(video?.videoUrl);
   await removeStored(video?.thumbnailUrl);
+  updateTag(VIDEOS_TAG);
   refresh();
 }

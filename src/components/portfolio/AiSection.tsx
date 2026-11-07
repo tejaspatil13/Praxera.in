@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { motion } from "motion/react";
 import { aiCapabilities } from "@/content/portfolio";
 import { MaskedLines, SectionLabel, ease } from "./shared";
@@ -9,22 +10,37 @@ const ROWS = 12;
 /** A fixed scatter, so server and browser render the same mosaic. */
 const delay = (i: number) => ((i * 7919) % 97) / 97;
 
-/** A prompt resolves into a finished frame, tile by tile. */
+/** A prompt resolves into a finished frame, tile by tile, every time it comes into view. */
 function Generation() {
+  const box = useRef<HTMLDivElement>(null);
+  const [on, setOn] = useState(false);
+
+  useEffect(() => {
+    const element = box.current;
+    if (!element) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.intersectionRatio >= 0.35) setOn(true);
+        else if (!entry.isIntersecting) setOn(false);
+      },
+      { threshold: [0, 0.35] },
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div aria-hidden className="relative mx-auto w-full max-w-sm">
-      <motion.p initial={{ width: 0 }} whileInView={{ width: "100%" }} viewport={{ once: true, amount: 0.5 }} transition={{ duration: 1.4, ease: "linear" }} className="overflow-hidden whitespace-nowrap font-mono text-xs text-accent">
-        &gt; generate: cinematic reel cover, 9:16
-      </motion.p>
+    <div ref={box} aria-hidden data-on={on} className="pf-gen relative mx-auto w-full max-w-sm">
+      <p className="pf-gen-prompt font-mono text-xs text-accent">&gt; generate: cinematic reel cover, 9:16</p>
       <div className="relative mt-3 aspect-[9/16] overflow-hidden rounded-2xl border border-[var(--pf-line)] bg-[var(--pf-panel)]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/portfolio/poster-research.jpg" alt="" loading="lazy" className="pf-kenburns absolute inset-0 h-full w-full object-cover" />
+        <img src="/portfolio/poster-research.jpg" alt="" decoding="async" className="pf-kenburns absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${COLS}, 1fr)`, gridTemplateRows: `repeat(${ROWS}, 1fr)` }}>
           {Array.from({ length: COLS * ROWS }, (_, i) => (
-            <motion.span key={i} initial={{ opacity: 1 }} whileInView={{ opacity: 0 }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 0.35, delay: 0.5 + delay(i) * 1.6 }} className="bg-[var(--pf-panel)] outline outline-1 -outline-offset-1 outline-white/5" />
+            <span key={i} style={{ "--tile-delay": `${(0.5 + delay(i) * 1.6).toFixed(2)}s` } as CSSProperties} className="pf-gen-tile bg-[var(--pf-panel)] outline outline-1 -outline-offset-1 outline-white/5" />
           ))}
         </div>
-        <motion.span initial={{ top: "0%" }} whileInView={{ top: "100%" }} viewport={{ once: true, amount: 0.3 }} transition={{ duration: 2.2, delay: 0.3, ease: "easeInOut" }} className="absolute inset-x-0 h-px bg-accent shadow-[0_0_18px_4px_rgb(45_212_191/0.5)]" />
+        <span className="pf-gen-scan absolute inset-x-0 h-px bg-accent shadow-[0_0_18px_4px_rgb(255_42_60/0.5)]" />
       </div>
     </div>
   );

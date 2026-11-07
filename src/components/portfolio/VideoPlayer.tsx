@@ -9,7 +9,7 @@ export type PlayerVideo = { title: string; videoUrl: string; thumbnailUrl: strin
 
 export const videoPoster = (v: PlayerVideo) => v.thumbnailUrl || parseVideoUrl(v.videoUrl)?.poster || "";
 
-type PlayerProps = { active: boolean; onStart: () => void; onShape?: (vertical: boolean) => void };
+type PlayerProps = { active: boolean; busy?: boolean; onStart: () => void; onShape?: (vertical: boolean) => void };
 
 const SETTLE_MS = 1500;
 
@@ -55,11 +55,55 @@ function PlayButton({ title, onClick }: { title: string; onClick: () => void }) 
   );
 }
 
+const onSlowNetwork = () => {
+  const net = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+  return !!(net?.saveData || (net?.effectiveType && net.effectiveType !== "4g"));
+};
+
+/** Starts buffering as a card comes close, so a tap plays at once. Slow or data-saving connections fetch just the file's header. */
+function usePreloadNearby(box: RefObject<HTMLDivElement | null>, video: RefObject<HTMLVideoElement | null>) {
+  useEffect(() => {
+    const element = box.current;
+    if (!element) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const v = video.current;
+        if (!entry.isIntersecting || !v) return;
+        v.preload = onSlowNetwork() ? "metadata" : "auto";
+        observer.disconnect();
+      },
+      { rootMargin: "30% 0px" },
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [box, video]);
+}
+
+/** Touch screens have no hover, so a card plays silently while it is on screen, the way a mouse previews it on a laptop. */
+function usePreviewOnScreen(box: RefObject<HTMLDivElement | null>, video: RefObject<HTMLVideoElement | null>, enabled: boolean) {
+  useEffect(() => {
+    const element = box.current;
+    if (!element || !enabled || !matchMedia("(hover: none)").matches || onSlowNetwork()) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const v = video.current;
+        if (!v) return;
+        if (!entry.isIntersecting) return v.pause();
+        v.muted = true;
+        void v.play().catch(() => {});
+      },
+      { threshold: 0.6 },
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [box, video, enabled]);
+}
+
 function Poster({ src, title }: { src: string; title: string }) {
   if (!src) return <span className="pf-poster absolute inset-0 flex items-center justify-center bg-[var(--pf-panel)] p-5 text-center text-3xl text-white/25">{title}</span>;
-  // Thumbnails can come from any host, so they skip the image optimiser.
+  // Thumbnails can come from any host, so they skip the image optimiser. They are the whole gallery until someone presses play, so they load straight away.
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={`Thumbnail for ${title}`} loading="lazy" decoding="async" className="pf-kenburns absolute inset-0 h-full w-full object-cover" />;
+  return <img src={src} alt={`Thumbnail for ${title}`} decoding="async" className="pf-kenburns absolute inset-0 h-full w-full object-cover" />;
 }
 
 function Unavailable({ source, title, poster }: { source: ParsedVideo | null; title: string; poster: string }) {
@@ -79,11 +123,11 @@ function Unavailable({ source, title, poster }: { source: ParsedVideo | null; ti
 }
 
 /** Stays mounted so a tap can start playback directly. Phones refuse to play with sound any other way. */
-function FilePlayer({ source, title, poster, active, onStart, onShape }: { source: ParsedVideo; title: string; poster: string } & PlayerProps) {
+function FilePlayer({ source, title, poster, active, busy = false, onStart, onShape }: { source: ParsedVideo; title: string; poster: string } & PlayerProps) {
   const box = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
-  const [preview, setPreview] = useState(false);
+  const [rolling, setRolling] = useState(false);
   const [waiting, setWaiting] = useState(false);
   const [muted, setMuted] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -91,18 +135,19 @@ function FilePlayer({ source, title, poster, active, onStart, onShape }: { sourc
   const width = useTransform(progress, (p) => `${p * 100}%`);
 
   const settle = useStopOffscreen(box, useCallback(() => video.current?.pause(), []));
+  usePreloadNearby(box, video);
+  usePreviewOnScreen(box, video, !active && !busy);
 
   // Only one video plays at a time: starting another card pauses this one.
   useEffect(() => {
     if (!active) video.current?.pause();
-  }, [active]);
+  }, [active, busy]);
 
   if (failed) return <Unavailable source={source} title={title} poster={poster} />;
 
   const start = () => {
     const v = video.current;
     if (!v) return;
-    setPreview(false);
     v.muted = false;
     setMuted(false);
     settle();
@@ -139,12 +184,10 @@ function FilePlayer({ source, title, poster, active, onStart, onShape }: { sourc
         const v = video.current;
         if (e.pointerType !== "mouse" || active || !v) return;
         v.muted = true;
-        setPreview(true);
         void v.play().catch(() => {});
       }}
       onPointerLeave={() => {
         if (active) return;
-        setPreview(false);
         video.current?.pause();
       }}
     >
@@ -157,17 +200,24 @@ function FilePlayer({ source, title, poster, active, onStart, onShape }: { sourc
         onClick={active ? toggle : undefined}
         onLoadedMetadata={(e) => onShape?.(e.currentTarget.videoHeight > e.currentTarget.videoWidth)}
         onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
+        onPause={() => {
+          setPlaying(false);
+          if (!active) setRolling(false);
+        }}
         onWaiting={() => setWaiting(true)}
-        onPlaying={() => setWaiting(false)}
+        onPlaying={() => {
+          setWaiting(false);
+          setRolling(true);
+        }}
         onEnded={() => progress.set(0)}
         onError={() => setFailed(true)}
         onTimeUpdate={(e) => progress.set(e.currentTarget.currentTime / (e.currentTarget.duration || 1))}
         className={`h-full w-full ${source.vertical ? "object-cover" : "object-contain"}`}
       />
-      {!active && !preview ? <Poster src={poster} title={title} /> : null}
+      {/* The thumbnail holds the frame until the first picture is ready, so a tap never shows a black box. */}
+      {!rolling ? <Poster src={poster} title={title} /> : null}
       {!active ? <PlayButton title={title} onClick={start} /> : null}
-      {waiting && active ? <Loader2 aria-label="Loading" className="absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 animate-spin text-white" /> : null}
+      {active && playing && (waiting || !rolling) ? <Loader2 aria-label="Loading" className="absolute left-1/2 top-1/2 h-9 w-9 -translate-x-1/2 -translate-y-1/2 animate-spin text-white" /> : null}
       {active ? (
         <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2.5 pb-2 pt-9 transition-opacity duration-300 ${playing ? "opacity-0 focus-within:opacity-100 group-hover/player:opacity-100 [@media(hover:none)]:opacity-100" : ""}`}>
           <div
@@ -243,10 +293,10 @@ function EmbedPlayer({ source, title, poster, active, onStart }: { source: Parse
 }
 
 /** Fills its positioned parent. Picks our own player, the provider's embed, or a link out. */
-export function VideoPlayer({ video, active, onStart, onShape }: { video: PlayerVideo } & PlayerProps) {
+export function VideoPlayer({ video, active, busy, onStart, onShape }: { video: PlayerVideo } & PlayerProps) {
   const source = parseVideoUrl(video.videoUrl);
   const poster = videoPoster(video);
   if (!source || source.kind === "link") return <Unavailable source={source} title={video.title} poster={poster} />;
-  if (source.kind === "file") return <FilePlayer source={source} title={video.title} poster={poster} active={active} onStart={onStart} onShape={onShape} />;
+  if (source.kind === "file") return <FilePlayer source={source} title={video.title} poster={poster} active={active} busy={busy} onStart={onStart} onShape={onShape} />;
   return <EmbedPlayer source={source} title={video.title} poster={poster} active={active} onStart={onStart} />;
 }

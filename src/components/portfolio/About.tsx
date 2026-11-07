@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef } from "react";
-import Image from "next/image";
 import { motion, useScroll, useTransform } from "motion/react";
 import { profile } from "@/content/portfolio";
 import { MaskedLines, SectionLabel, ease } from "./shared";
@@ -16,7 +15,9 @@ export function About() {
         <motion.div initial="hidden" whileInView="shown" viewport={{ once: true, amount: 0.25 }} className="relative mx-auto aspect-[2/3] w-full max-w-sm lg:max-w-md">
           <motion.div variants={{ hidden: { clipPath: "inset(100% 0 0 0)" }, shown: { clipPath: "inset(0% 0 0 0)" } }} transition={{ duration: 1.1, ease }} className="absolute inset-0">
             <motion.div style={{ y }} className="absolute inset-0">
-              <Image src="/portfolio/tejas-patil.png" alt="Illustrated portrait of Tejas Patil in a teal blazer" fill sizes="(min-width: 1024px) 28rem, 90vw" className="object-contain" />
+              {/* Already sized for the page, and fetched up front so it is there before anyone scrolls to it. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/portfolio/tejas-patil.webp" alt="Illustrated portrait of Tejas Patil in a teal blazer" width={640} height={960} decoding="async" className="absolute inset-0 h-full w-full object-contain" />
             </motion.div>
           </motion.div>
         </motion.div>
@@ -27,7 +28,7 @@ export function About() {
           </h2>
           <div className="mt-7 max-w-2xl space-y-4 text-base leading-relaxed text-slate-300 sm:text-lg">
             <p>
-              I’m {profile.name}, the founder of Praxera Technologies, based in Nashik. I combine video editing, creativity and storytelling with a technical background to make digital content people actually stop for.
+              I’m {profile.name}, a video editor and creative producer based in Nashik. I combine video editing, creativity and storytelling with a technical background to make digital content people actually stop for.
             </p>
             <p>
               I’m a final-year Computer Engineering student and I work as an AI Engineer Intern, building real AI systems. That technical side shapes how I produce video: I use modern AI tools alongside traditional editing, and I know how they work under the hood.

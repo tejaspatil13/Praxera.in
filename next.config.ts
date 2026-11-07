@@ -24,6 +24,11 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      // Without this, a return visitor's browser asks again for every reel and poster.
+      {
+        source: "/portfolio/:file([\\w.-]+\\.(?:jpg|webp|png|mp4))",
+        headers: [{ key: "Cache-Control", value: "public, max-age=86400, stale-while-revalidate=2592000" }],
+      },
       // Voice typing on the requirements form is the only use of the microphone.
       {
         source: "/requirements",
